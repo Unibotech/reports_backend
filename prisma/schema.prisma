@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETE
+  FAILED
+  TRANSFERRED
+}
+
+model Department {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  manager       Manager?
+  employees     Employee[]
+  tasks         Task[]     @relation("DepartmentTasks")
+
+  transfersFrom TaskTransfer[] @relation("FromDepartment")
+  transfersTo   TaskTransfer[] @relation("ToDepartment")
+}
+
+model Manager {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int        @unique
+
+  assignedTasks Task[] @relation("AssignedTasks")
+
+  createdTasks Task[]
+  transfers    TaskTransfer[]
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId Int
+
+  tasks Task[]
+}
+
+model Task {
+  id            Int        @id @default(autoincrement())
+  title         String
+  taskDate      DateTime
+  status        TaskStatus @default(PENDING)
+  pendingReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  department   Department @relation("DepartmentTasks", fields: [departmentId], references: [id])
+  departmentId Int
+
+
+  currentDepartmentId Int
+
+ assignedTo         Employee? @relation(fields: [assignedToId], references: [id])
+  assignedToId       Int?
+
+  assignedToManager  Manager?  @relation("AssignedTasks", fields: [assignedToManagerId], references: [id])
+  assignedToManagerId Int?
+  comment   String?
+
+assignees Json @default("[]")
+  createdBy   Manager? @relation(fields: [createdById], references: [id])
+  createdById Int?
+
+  transfers TaskTransfer[]
+}
+
+model TaskTransfer {
+  id            Int      @id @default(autoincrement())
+  transferredAt DateTime @default(now())
+
+  task   Task @relation(fields: [taskId], references: [id])
+  taskId Int
+
+  fromDepartment   Department @relation("FromDepartment", fields: [fromDepartmentId], references: [id])
+  fromDepartmentId Int
+
+  toDepartment   Department @relation("ToDepartment", fields: [toDepartmentId], references: [id])
+  toDepartmentId Int
+
+  transferredBy   Manager @relation(fields: [transferredById], references: [id])
+  transferredById Int
+}
