@@ -51,9 +51,13 @@ import departmentRoutes from "./routes/departmentRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import reportRoutes from "./routes/reportsRoutes.js";
+import { PrismaClient } from "@prisma/client";
 
+
+
+const prisma = new PrismaClient();
 const app = express();
-const port = 5001;
+const PORT = process.env.PORT || 5001;
 app.use(express.json());
 // app.use(cors());
 app.use(
@@ -81,7 +85,7 @@ app.get("/", (req, res) => {
 
 app.get("/test-db", async (req, res) => {
   try {
-    const data = await prisma.product.findMany(); // change model if needed
+    const data = await prisma.task.findMany();
     res.json(data);
   } catch (err) {
     console.error(err);
@@ -92,5 +96,5 @@ app.get("/test-db", async (req, res) => {
 
 
 
-const PORT = process.env.PORT || 5001;
+// const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
